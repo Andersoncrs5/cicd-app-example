@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: node-app
-        image: andersoncrms/cicd-app-example:v1.0.0
+        image: andersoncrms/node-cicd-app
         ports:
         - containerPort: 3000
         env:

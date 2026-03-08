@@ -6,8 +6,43 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mongodb
-  namespace: api
+  name: node-app-deployment
+spec:
+  replicas: 2 
+  selector:
+    matchLabels:
+      app: node-app
+  template:
+    metadata:
+      labels:
+        app: node-app
+    spec:
+      containers:
+      - name: node-app
+        image: andersoncrms/node-cicd-app
+        ports:
+        - containerPort: 3000
+        env:
+        - name: MONGO_URI
+          value: "mongodb://mongodb-service:27017/blog"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-app-service
+spec:
+  type: LoadBalancer 
+  selector:
+    app: node-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb-deployment
 spec:
   selector:
     matchLabels:
@@ -19,60 +54,18 @@ spec:
     spec:
       containers:
       - name: mongodb
-        image: mongo:5.0
+        image: mongo:latest
         ports:
         - containerPort: 27017
-        env:
-        - name: MONGO_INITDB_ROOT_USERNAME
-          value: "root"
-        - name: MONGO_INITDB_ROOT_PASSWORD
-          value: "root"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongodb-svc
-  namespace: api
+  name: mongodb-service # Este é o nome que seu app.js usa na MONGO_URI
 spec:
   selector:
     app: mongodb
   ports:
-  - port: 27017
-    targetPort: 27017
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: express-api
-  namespace: api
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: express-api
-  template:
-    metadata:
-      labels:
-        app: express-api
-    spec:
-      containers:
-      - name: express-api
-        image: cicd-app-example:latest 
-        imagePullPolicy: Always 
-        ports:
-        - containerPort: 3000
-        env:
-        - name: MONGO_URI
-          value: "mongodb://root:root@mongodb-svc:27017/blog?authSource=admin"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: express-api-svc
-  namespace: api
-spec:
-  selector:
-    app: express-api
-  ports:
-  - port: 80
-    targetPort: 3000
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017

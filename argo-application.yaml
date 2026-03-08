@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: node-cicd-app
+  namespace: argocd # Onde o ArgoCD está instalado
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Andersoncrs5/cicd-app-example.git
+    targetRevision: HEAD
+    path: k8s # Caminho onde estão seus arquivos de Deploy/Service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app-namespace # Onde sua aplicação vai rodar (crie-o se não existir)
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    createNamespace: true
