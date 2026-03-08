@@ -179,6 +179,30 @@ app.get("/health", async (req, res) => {
   }
 });
 
+app.get('/', (req, res) => {
+  const routes = [];
+  
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) { 
+      routes.push({
+        method: Object.keys(middleware.route.methods).join(', ').toUpperCase(),
+        path: middleware.route.path
+      });
+    } else if (middleware.name === 'router') { 
+      middleware.handle.stack.forEach((handler) => {
+        if (handler.route) {
+          routes.push({
+            method: Object.keys(handler.route.methods).join(', ').toUpperCase(),
+            path: handler.route.path
+          });
+        }
+      });
+    }
+  });
+
+  res.json(routes);
+});
+
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
