@@ -1,7 +1,7 @@
 pipeline {
     agent {
         kubernetes {
-            yamlFile 'k8s/setup-agent.yaml'
+            yamlFile 'k8s/setup.yaml'
             defaultContainer 'node'
         }
     }
@@ -20,6 +20,25 @@ pipeline {
             steps {
                 container('kaniko') {
                     echo "Aqui entraremos com o comando do Kaniko no próximo passo..."
+                }
+            }
+        }
+    }
+    post {
+        success {
+            echo '✅ Pipeline executado com sucesso!'
+        }
+
+        failure {
+            echo '❌ Pipeline falhou! Verifique os logs.'
+        }
+
+        always {
+            script {
+                if (currentBuild.currentResult == 'SUCCESS') {
+                    echo "🎉 Deploy concluído"
+                } else {
+                    echo "⚠️ Algo deu errado"
                 }
             }
         }
