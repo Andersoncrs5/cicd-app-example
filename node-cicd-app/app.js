@@ -4,6 +4,14 @@ const app = express();
 
 app.use(express.json());
 
+app.use((err, req, res, next) => {
+  console.error(err);
+
+  res.status(500).json({
+    error: "Internal server error"
+  });
+});
+
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://mongodb-service:27017/blog';
 
 mongoose.connect(MONGO_URI)
@@ -22,6 +30,79 @@ const Post = mongoose.model('Post', {
   content: String,
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
   createdAt: { type: Date, default: Date.now }
+});
+
+const Comment = mongoose.model('Comment', {
+  content: String,
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  post: { type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
+  createdAt: { type: Date, default: Date.now }
+});
+
+// COMMENT
+app.post('/comments', async (req, res) => {
+  try {
+    const comment = new Comment(req.body);
+    await comment.save();
+
+    res.status(201).send(comment);
+  } catch (err) {
+    res.status(400).send({ error: 'Erro ao criar comentário' });
+  }
+});
+
+app.get('/comments', async (req, res) => {
+  const comments = await Comment
+    .find()
+    .populate('author')
+    .populate('post');
+
+  res.send(comments);
+});
+
+app.get('/posts/:postId/comments', async (req, res) => {
+
+  const comments = await Comment
+    .find({ post: req.params.postId })
+    .populate('author');
+
+  res.send(comments);
+});
+
+app.get('/comments/:id', async (req, res) => {
+
+  const comment = await Comment
+    .findById(req.params.id)
+    .populate('author')
+    .populate('post');
+
+  if (!comment) {
+    return res.status(404).send();
+  }
+
+  res.send(comment);
+});
+
+app.put('/comments/:id', async (req, res) => {
+
+  const comment = await Comment.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true }
+  );
+
+  if (!comment) {
+    return res.status(404).send();
+  }
+
+  res.send(comment);
+});
+
+app.delete('/comments/:id', async (req, res) => {
+
+  await Comment.findByIdAndDelete(req.params.id);
+
+  res.send({ message: "Comentário removido com sucesso" });
 });
 
 app.post('/users', async (req, res) => {
@@ -47,8 +128,17 @@ app.post('/posts', async (req, res) => {
 });
 
 app.get('/posts', async (req, res) => {
-  const posts = await Post.find().populate('author'); // populate traz os dados do user
-  res.send(posts);
+
+  const page = parseInt(req.query.page) || 1
+  const limit = parseInt(req.query.limit) || 10
+
+  const posts = await Post
+    .find()
+    .populate('author')
+    .skip((page - 1) * limit)
+    .limit(limit)
+
+  res.send(posts)
 });
 
 app.get('/posts/:id', async (req, res) => {
@@ -95,16 +185,3 @@ if (require.main === module) {
 }
 
 module.exports = app;
-
-const server = app.listen(PORT, () => console.log(`Rodando na porta ${PORT}`));
-
-process.on('SIGTERM', () => {
-  console.log('Recebido SIGTERM. Fechando servidor suavemente...');
-  server.close(() => {
-    console.log('Servidor fechado.');
-    mongoose.connection.close(false, () => {
-      console.log('Conexão MongoDB fechada.');
-      process.exit(0);
-    });
-  });
-});
