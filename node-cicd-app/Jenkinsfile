@@ -27,22 +27,20 @@ pipeline {
 
         stage('Check Branch') {
             steps {
-                script {
-                    def branch = sh(
-                        script: "git rev-parse --abbrev-ref HEAD",
-                        returnStdout: true
-                    ).trim()
+                echo "Branch atual: ${env.GIT_BRANCH}"
+            }
+        }
 
-                    env.CURRENT_BRANCH = branch
-                    echo "Branch atual: ${branch}"
-                }
+        stage('Debug Envs') {
+            steps {
+                echo "Branch atual via env: ${env.BRANCH_NAME}"
+                
+                sh 'printenv | sort'
             }
         }
 
         stage('Build Image') {
-            when {
-                expression { env.CURRENT_BRANCH == 'main' }
-            }
+            
             steps {
                 container('kaniko') {
                     sh """
