@@ -20,7 +20,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongodb-service 
+  name: mongodb-service # Este é o nome que seu app.js usa na MONGO_URI
 spec:
   selector:
     app: mongodb

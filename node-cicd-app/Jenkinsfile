@@ -1,0 +1,27 @@
+pipeline {
+    agent {
+        kubernetes {
+            yamlFile 'k8s/setup-agent.yaml'
+            defaultContainer 'node'
+        }
+    }
+
+    stages {
+        stage('Install & Test') {
+            steps {
+                container('node') {
+                    sh 'npm install'
+                    sh 'npm test'
+                }
+            }
+        }
+        
+        stage('Build with Kaniko') {
+            steps {
+                container('kaniko') {
+                    echo "Aqui entraremos com o comando do Kaniko no próximo passo..."
+                }
+            }
+        }
+    }
+}
