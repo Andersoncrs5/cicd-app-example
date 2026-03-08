@@ -18,10 +18,14 @@ pipeline {
             }
         }
         
-        stage('Build with Kaniko') {
-            when {
-                branch 'main'
+        stage('Check Branch') {
+            steps {
+                echo "A branch atual é: ${env.BRANCH_NAME}"
             }
+        }
+
+        stage('Build with Kaniko') {
+            
             steps {
                 container('kaniko') {
                     sh """
