@@ -1,7 +1,7 @@
 pipeline {
     agent {
         kubernetes {
-            yamlFile 'k8s/setup.yaml'
+            yamlFile 'node-cicd-app/k8s/setup.yaml'
             defaultContainer 'node'
         }
     }
