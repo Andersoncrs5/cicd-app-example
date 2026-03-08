@@ -41,6 +41,10 @@ pipeline {
 
         stage('Build Image') {
             
+            when {
+                env.GIT_BRANCH == 'origin/main'
+            }
+
             steps {
                 container('kaniko') {
                     sh """
