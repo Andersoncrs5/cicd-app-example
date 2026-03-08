@@ -19,9 +19,17 @@ pipeline {
         }
         
         stage('Build with Kaniko') {
+            when {
+                branch 'main'
+            }
             steps {
                 container('kaniko') {
-                    echo "Aqui entraremos com o comando do Kaniko no próximo passo..."
+                    sh """
+                    /kaniko/executor --context ${WORKSPACE}/node-cicd-app \
+                    --dockerfile ${WORKSPACE}/node-cicd-app/Dockerfile \
+                    --destination andersoncrms/node-cicd-app:v${env.BUILD_NUMBER} \
+                    --destination andersoncrms/node-cicd-app:latest
+                    """
                 }
             }
         }
