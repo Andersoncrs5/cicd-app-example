@@ -7,31 +7,41 @@ pipeline {
     }
 
     stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Install & Test') {
             steps {
                 dir('node-cicd-app') {
                     container('node') {
-                        sh 'npm install'
+                        sh 'npm ci'
                         sh 'npm test'
                     }
                 }
             }
         }
-        
+
         stage('Check Branch') {
             steps {
-                echo "A branch atual é: ${env.BRANCH_NAME}"
+                echo "Branch atual: ${env.BRANCH_NAME}"
             }
         }
 
-        stage('Build with Kaniko') {
-            
+        stage('Build Image') {
+            when {
+                branch 'main'
+            }
             steps {
                 container('kaniko') {
                     sh """
-                    /kaniko/executor --context ${WORKSPACE}/node-cicd-app \
+                    /kaniko/executor \
+                    --context ${WORKSPACE}/node-cicd-app \
                     --dockerfile ${WORKSPACE}/node-cicd-app/Dockerfile \
-                    --destination andersoncrms/node-cicd-app:v${env.BUILD_NUMBER} \
+                    --destination andersoncrms/node-cicd-app:${env.BUILD_NUMBER} \
                     --destination andersoncrms/node-cicd-app:latest
                     """
                 }
