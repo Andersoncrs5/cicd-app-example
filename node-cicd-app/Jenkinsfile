@@ -9,9 +9,11 @@ pipeline {
     stages {
         stage('Install & Test') {
             steps {
-                container('node') {
-                    sh 'npm install'
-                    sh 'npm test'
+                dir('node-cicd-app') {
+                    container('node') {
+                        sh 'npm install'
+                        sh 'npm test'
+                    }
                 }
             }
         }
