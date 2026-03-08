@@ -67,6 +67,27 @@ app.delete('/posts/:id', async (req, res) => {
   res.send({ message: 'Post removido com sucesso' });
 });
 
+app.get("/health", async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const isMongoConnected = mongoose.connection.readyState === 1;
+
+    if (isMongoConnected) {
+      return res.status(200).json({
+        status: "UP",
+        database: "Connected",
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      throw new Error("Database not connected");
+    }
+  } catch (error) {
+    return res.status(503).json({
+      status: "DOWN",
+      reason: error.message
+    });
+  }
+});
 
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
@@ -74,3 +95,16 @@ if (require.main === module) {
 }
 
 module.exports = app;
+
+const server = app.listen(PORT, () => console.log(`Rodando na porta ${PORT}`));
+
+process.on('SIGTERM', () => {
+  console.log('Recebido SIGTERM. Fechando servidor suavemente...');
+  server.close(() => {
+    console.log('Servidor fechado.');
+    mongoose.connection.close(false, () => {
+      console.log('Conexão MongoDB fechada.');
+      process.exit(0);
+    });
+  });
+});

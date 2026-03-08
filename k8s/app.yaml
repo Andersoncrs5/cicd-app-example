@@ -15,6 +15,18 @@ spec:
       containers:
       - name: node-app
         image: andersoncrms/node-cicd-app
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
         ports:
         - containerPort: 3000
         env:
